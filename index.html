@@ -334,7 +334,7 @@
 <div class="toast" id="toast" role="status"></div>
 
 <script>
-const CLAUDE_MODEL = 'claude-sonnet-5-5';
+const CLAUDE_MODEL = await getModel();
 const MAX_TOKENS = 600;
 const API_URL = 'https://api.anthropic.com/v1/messages';
 const HIST_MAX = 10;
@@ -711,7 +711,18 @@ renderChips();
 renderHistory();
 const firstHist = loadHistory()[0];
 if (firstHist) { els.genre.value = firstHist.genre; els.object.value = firstHist.object; renderChips(); renderStory(firstHist); }
+
+async function getModel(tier = 'sonnet') {
+  try {
+    const response = await fetch('../config.json');
+    const config = await response.json();
+    return config.models[tier];
+  } catch {
+    return 'claude-sonnet-5-5';
+  }
+}
 </script>
 </body>
 </html>
+
 
