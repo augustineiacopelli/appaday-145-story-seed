@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Story Seed &middot; AppADay 145</title>
+<meta name="description" content="Pick a genre and a single object, and Claude plants a two paragraph story opener with that object as the catalyst.">
+<meta name="theme-color" content="#1d2a24">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231d2a24'/%3E%3Cpath d='M32 50V28' stroke='%23f3ead8' stroke-width='4' stroke-linecap='round'/%3E%3Cpath d='M32 34c-10 0-14-8-14-14 8 0 14 4 14 14z' fill='%239cc28a'/%3E%3Cpath d='M32 30c0-10 6-16 16-16 0 10-6 16-16 16z' fill='%23d9a441'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --ink: #1d2a24;
+    --ink-soft: #3a4a42;
+    --paper: #f3ead8;
+    --paper-deep: #e8dcc2;
+    --card: #fffaf0;
+    --moss: #4f7a4a;
+    --sprout: #9cc28a;
+    --amber: #c8892a;
+    --amber-deep: #9b6516;
+    --muted: #7d7462;
+    --rule: rgba(29, 42, 36, 0.14);
+    --shadow: 0 1px 2px rgba(29,42,36,0.08), 0 8px 28px rgba(29,42,36,0.10);
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Times New Roman", serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background:
+      radial-gradient(1200px 500px at 50% -200px, rgba(156,194,138,0.28), transparent 70%),
+      var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.5;
+  }
+  a { color: inherit; }
+  button, input { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+
+  /* Header */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 10px 16px; padding-top: max(10px, env(safe-area-inset-top));
+    background: var(--ink); color: var(--paper);
+  }
+  .topbar .crumb { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .num {
+    font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em;
+    padding: 3px 8px; border: 1px solid rgba(243,234,216,0.35); border-radius: 999px;
+    white-space: nowrap;
+  }
+  .topbar .title { font-family: var(--serif); font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .topbar nav { display: flex; align-items: center; gap: 4px; }
+  .back {
+    display: inline-flex; align-items: center; min-height: 44px; padding: 0 10px;
+    font-size: 13px; text-decoration: none; opacity: 0.85; border-radius: 8px;
+  }
+  .back:hover { opacity: 1; background: rgba(243,234,216,0.08); }
+  .icon-btn {
+    width: 44px; height: 44px; display: inline-grid; place-items: center;
+    background: transparent; border: 0; border-radius: 10px; color: var(--paper);
+  }
+  .icon-btn:hover { background: rgba(243,234,216,0.1); }
+  .icon-btn svg { width: 22px; height: 22px; }
+
+  main {
+    flex: 1; width: 100%; max-width: 760px; margin: 0 auto;
+    padding: 24px 16px 40px; display: flex; flex-direction: column; gap: 22px;
+  }
+  .hero h1 {
+    font-family: var(--serif); font-weight: 400; font-size: clamp(30px, 7vw, 44px);
+    line-height: 1.1; margin: 0 0 6px; letter-spacing: -0.01em;
+  }
+  .hero h1 em { color: var(--moss); font-style: italic; }
+  .hero p { margin: 0; color: var(--ink-soft); max-width: 56ch; }
+
+  /* Planter form */
+  .planter {
+    background: var(--card); border: 1px solid var(--rule); border-radius: 18px;
+    box-shadow: var(--shadow); padding: 18px; display: flex; flex-direction: column; gap: 18px;
+  }
+  .field-label {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+    font-family: var(--mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 8px;
+  }
+  .field-label span.hint { text-transform: none; letter-spacing: 0; font-family: var(--sans); font-size: 12px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+  .chip {
+    min-height: 44px; padding: 0 14px; border-radius: 999px;
+    border: 1px solid var(--rule); background: var(--paper);
+    font-size: 14px; transition: background .15s, border-color .15s, color .15s;
+  }
+  .chip:hover { border-color: var(--moss); }
+  .chip[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .input-row { display: flex; gap: 8px; }
+  .text-input {
+    flex: 1; min-width: 0; min-height: 48px; padding: 0 14px;
+    border: 1px solid var(--rule); border-radius: 12px; background: #fff;
+    font-size: 16px; font-family: var(--serif);
+  }
+  .text-input:focus { border-color: var(--moss); outline: none; box-shadow: 0 0 0 3px rgba(79,122,74,0.18); }
+  .ghost-btn {
+    min-height: 48px; min-width: 48px; padding: 0 14px; border-radius: 12px;
+    border: 1px solid var(--rule); background: var(--paper); display: inline-flex; align-items: center; gap: 8px;
+    font-size: 14px; white-space: nowrap;
+  }
+  .ghost-btn:hover { border-color: var(--moss); background: var(--paper-deep); }
+  .ghost-btn svg { width: 18px; height: 18px; flex: none; }
+  .plant-btn {
+    min-height: 54px; border: 0; border-radius: 14px;
+    background: var(--moss); color: #fff; font-size: 17px; font-weight: 600; letter-spacing: 0.01em;
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    box-shadow: 0 4px 14px rgba(79,122,74,0.35); transition: transform .08s, background .15s;
+  }
+  .plant-btn:hover { background: #456c41; }
+  .plant-btn:active { transform: translateY(1px); }
+  .plant-btn:disabled { opacity: 0.6; cursor: progress; }
+  .plant-btn svg { width: 20px; height: 20px; }
+
+  .notice {
+    display: none; padding: 12px 14px; border-radius: 12px; font-size: 14px;
+    background: #fbe9d6; border: 1px solid #ecc49a; color: #6d3f0b;
+  }
+  .notice.show { display: block; }
+  .notice button { background: none; border: 0; padding: 0; text-decoration: underline; color: inherit; font-weight: 600; min-height: 0; }
+
+  /* Reading card */
+  .reading {
+    display: none; position: relative;
+    background: var(--card); border-radius: 18px; border: 1px solid var(--rule);
+    box-shadow: var(--shadow); padding: 26px 22px 18px; overflow: hidden;
+  }
+  .reading.show { display: block; animation: rise .45s ease both; }
+  .reading::before {
+    content: ""; position: absolute; inset: 0 0 auto 0; height: 5px;
+    background: linear-gradient(90deg, var(--moss), var(--sprout), var(--amber));
+  }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .reading .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center;
+    font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted);
+    margin-bottom: 16px;
+  }
+  .reading .meta b { color: var(--ink); font-weight: 500; }
+  .story { font-family: var(--serif); font-size: clamp(17px, 2.4vw, 19px); line-height: 1.72; color: #22302a; }
+  .story p { margin: 0 0 1em; text-wrap: pretty; }
+  .story p:first-child::first-letter {
+    float: left; font-size: 3.4em; line-height: 0.82; padding: 0.08em 0.1em 0 0; color: var(--moss);
+  }
+  .story .obj { background: linear-gradient(transparent 62%, rgba(200,137,42,0.28) 62%); }
+  .story.loading p { color: transparent; }
+  .skeleton { display: grid; gap: 12px; padding: 4px 0 12px; }
+  .skeleton i {
+    display: block; height: 14px; border-radius: 6px;
+    background: linear-gradient(90deg, var(--paper-deep), #f6efdf, var(--paper-deep));
+    background-size: 200% 100%; animation: shimmer 1.3s linear infinite;
+  }
+  .skeleton i:nth-child(4) { width: 62%; }
+  .skeleton i:nth-child(5) { margin-top: 12px; }
+  .skeleton i:last-child { width: 48%; }
+  @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+  .card-actions {
+    display: flex; gap: 10px; flex-wrap: wrap; border-top: 1px dashed var(--rule); padding-top: 14px; margin-top: 4px;
+  }
+  .card-actions .ghost-btn { flex: 1 1 140px; justify-content: center; }
+  .byline { font-size: 12px; color: var(--muted); margin: 10px 0 0; text-align: right; font-style: italic; font-family: var(--serif); }
+
+  /* History */
+  .history h2 {
+    font-family: var(--mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); font-weight: 500; margin: 0 0 10px; display: flex; justify-content: space-between; align-items: center;
+  }
+  .history h2 button { font-family: var(--sans); text-transform: none; letter-spacing: 0; font-size: 13px; background: none; border: 0; color: var(--muted); min-height: 44px; padding: 0 6px; text-decoration: underline; }
+  .hist-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .hist-item {
+    width: 100%; text-align: left; min-height: 60px; padding: 12px 14px;
+    background: rgba(255,250,240,0.7); border: 1px solid var(--rule); border-radius: 12px;
+    display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; align-items: center;
+  }
+  .hist-item:hover { background: var(--card); border-color: var(--moss); }
+  .hist-item.active { border-color: var(--moss); background: var(--card); box-shadow: inset 3px 0 0 var(--moss); }
+  .hist-item .h-top { font-weight: 600; font-size: 14px; }
+  .hist-item .h-top em { font-style: normal; color: var(--moss); }
+  .hist-item .h-snip { grid-column: 1 / 2; font-family: var(--serif); font-size: 14px; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hist-item .h-time { grid-row: 1 / 3; grid-column: 2; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .empty { font-family: var(--serif); font-style: italic; color: var(--muted); padding: 14px; border: 1px dashed var(--rule); border-radius: 12px; text-align: center; }
+
+  footer {
+    padding: 22px 16px; padding-bottom: max(22px, env(safe-area-inset-bottom));
+    text-align: center; font-size: 13px; color: var(--muted); border-top: 1px solid var(--rule);
+  }
+  footer a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 6px; color: var(--ink); }
+
+  /* Modal */
+  .scrim {
+    position: fixed; inset: 0; background: rgba(20,28,24,0.55); display: none;
+    align-items: flex-end; justify-content: center; z-index: 50; padding: 0;
+  }
+  .scrim.open { display: flex; }
+  .modal {
+    width: 100%; max-width: 480px; background: var(--card); border-radius: 20px 20px 0 0;
+    padding: 20px 18px; padding-bottom: max(20px, env(safe-area-inset-bottom));
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.25); animation: rise .25s ease both;
+    max-height: 92dvh; overflow-y: auto;
+  }
+  @media (min-width: 600px) {
+    .scrim { align-items: center; padding: 16px; }
+    .modal { border-radius: 20px; }
+  }
+  .modal h2 { font-family: var(--serif); font-weight: 400; font-size: 24px; margin: 0 0 4px; }
+  .modal p.sub { margin: 0 0 16px; color: var(--ink-soft); font-size: 14px; }
+  .modal label { display: block; font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 14px 0 6px; }
+  .modal .text-input { width: 100%; font-family: var(--mono); font-size: 15px; }
+  .modal .small { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .modal-actions .ghost-btn, .modal-actions .plant-btn { flex: 1; justify-content: center; min-height: 48px; font-size: 15px; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: max(20px, env(safe-area-inset-bottom)); transform: translate(-50%, 20px);
+    background: var(--ink); color: var(--paper); padding: 10px 16px; border-radius: 999px; font-size: 14px;
+    opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 60;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  @media (min-width: 700px) {
+    main { padding-top: 40px; }
+    .planter { padding: 24px; }
+    .reading { padding: 34px 36px 22px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="crumb">
+    <span class="num">APP 145</span>
+    <span class="title">Story Seed</span>
+  </div>
+  <nav>
+    <a class="back" href="https://augustineiacopelli.github.io/appaday/">&larr; AppADay</a>
+    <button class="icon-btn" id="openSettings" aria-label="Settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </nav>
+</header>
+
+<main>
+  <section class="hero">
+    <h1>Plant one object.<br><em>Grow a story.</em></h1>
+    <p>Choose a genre and a single ordinary thing. Claude writes a two paragraph opening where that object sets everything in motion.</p>
+  </section>
+
+  <section class="planter" aria-label="Story ingredients">
+    <div>
+      <div class="field-label"><span>Genre</span><span class="hint">Tap one or type your own</span></div>
+      <div class="chips" id="chips" role="group" aria-label="Genre presets"></div>
+      <input class="text-input" id="genre" type="text" maxlength="60" placeholder="e.g. cozy mystery" autocomplete="off" aria-label="Genre">
+    </div>
+
+    <div>
+      <div class="field-label"><span>The object</span><span class="hint">One thing. Small is good.</span></div>
+      <div class="input-row">
+        <input class="text-input" id="object" type="text" maxlength="80" placeholder="e.g. a brass key with no teeth" autocomplete="off" aria-label="Object">
+        <button class="ghost-btn" id="randomObj" type="button" aria-label="Random object" title="Random object">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.3" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.3" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.3" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/></svg>
+          <span>Random</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="notice" id="notice" role="alert"></div>
+
+    <button class="plant-btn" id="plant" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-9"/><path d="M12 13c-4.5 0-7-3-7-7 4.5 0 7 3 7 7z"/><path d="M12 11c0-4.5 2.5-7 7-7 0 4.5-2.5 7-7 7z"/></svg>
+      <span id="plantLabel">Plant the seed</span>
+    </button>
+  </section>
+
+  <article class="reading" id="reading" aria-live="polite">
+    <div class="meta" id="meta"></div>
+    <div class="story" id="story"></div>
+    <div class="card-actions">
+      <button class="ghost-btn" id="regen" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+        Regenerate
+      </button>
+      <button class="ghost-btn" id="copy" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+        Copy
+      </button>
+    </div>
+    <p class="byline" id="byline"></p>
+  </article>
+
+  <section class="history" aria-label="Recent seeds">
+    <h2><span>Recent seeds</span><button type="button" id="clearHist">Clear</button></h2>
+    <ul class="hist-list" id="histList"></ul>
+  </section>
+</main>
+
+<footer>
+  App 145 of <a href="https://augustineiacopelli.github.io/appaday/">AppADay</a>, one app shipped every day by Augustine Iacopelli.
+</footer>
+
+<div class="scrim" id="scrim" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="setTitle">
+    <h2 id="setTitle">Settings</h2>
+    <p class="sub">Stored only in this browser. Your key goes straight to Anthropic and nowhere else.</p>
+    <label for="apiKey">Anthropic API key</label>
+    <input class="text-input" id="apiKey" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-...">
+    <p class="small">Create one at console.anthropic.com.</p>
+    <label for="sessionName">Session name</label>
+    <input class="text-input" id="sessionName" type="text" maxlength="40" autocomplete="off" placeholder="e.g. Tuesday writing club">
+    <p class="small">Signs each seed you plant.</p>
+    <div class="modal-actions">
+      <button class="ghost-btn" id="cancelSettings" type="button">Cancel</button>
+      <button class="plant-btn" id="saveSettings" type="button">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const CLAUDE_MODEL = 'claude-sonnet-5-5';
+const MAX_TOKENS = 600;
+const API_URL = 'https://api.anthropic.com/v1/messages';
+const HIST_MAX = 10;
+const K_KEY = 'appaday-145-apikey';
+const K_SESSION = 'appaday-145-session';
+const K_HIST = 'appaday-145-history';
+
+const GENRES = ['Mystery', 'Fantasy', 'Sci-Fi', 'Horror', 'Romance', 'Western', 'Noir', 'Fairy Tale', 'Thriller', 'Literary', 'Comedy', 'Historical'];
+const OBJECTS = [
+  'a brass key with no teeth', 'a pocket watch that runs backward', 'a child\'s red mitten', 'an unsent postcard',
+  'a jar of buttons', 'a cracked teacup', 'a library book forty years overdue', 'a single chess piece',
+  'a rosary with one bead missing', 'a lighthouse keeper\'s logbook', 'a pair of reading glasses', 'a train ticket to nowhere',
+  'a music box with no song', 'a snow globe of a town that does not exist', 'a feather quill', 'a rusted bicycle bell',
+  'a folded paper crane', 'a coin from no country', 'a locked diary', 'a wedding ring found in a fish',
+  'a lantern that will not stay lit', 'a map drawn on a napkin', 'a hotel room key', 'a seed packet with no label',
+  'a typewriter ribbon', 'a porcelain doll\'s hand', 'a jar of river stones', 'a telegram marked urgent',
+  'a compass that points home', 'a church bulletin from 1962', 'a bent silver spoon', 'a candle stub',
+  'a moth pinned under glass', 'a baseball signed by no one', 'a bottle of ink the color of rain', 'a radio that picks up yesterday'
+];
+
+const $ = (id) => document.getElementById(id);
+const els = {
+  chips: $('chips'), genre: $('genre'), object: $('object'), randomObj: $('randomObj'),
+  plant: $('plant'), plantLabel: $('plantLabel'), notice: $('notice'),
+  reading: $('reading'), meta: $('meta'), story: $('story'), byline: $('byline'),
+  regen: $('regen'), copy: $('copy'), histList: $('histList'), clearHist: $('clearHist'),
+  scrim: $('scrim'), openSettings: $('openSettings'), apiKey: $('apiKey'), sessionName: $('sessionName'),
+  saveSettings: $('saveSettings'), cancelSettings: $('cancelSettings'), toast: $('toast')
+};
+
+let current = null;
+let busy = false;
+let lastObjIdx = -1;
+
+// ---------- storage ----------
+function lsGet(k, fallback) {
+  try { const v = localStorage.getItem(k); return v === null ? fallback : v; } catch (e) { return fallback; }
+}
+function lsSet(k, v) {
+  try { localStorage.setItem(k, v); return true; } catch (e) { return false; }
+}
+function lsDel(k) {
+  try { localStorage.removeItem(k); } catch (e) { /* ignore */ }
+}
+function loadHistory() {
+  try {
+    const raw = localStorage.getItem(K_HIST);
+    const arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr.filter(x => x && Array.isArray(x.paragraphs)).slice(0, HIST_MAX) : [];
+  } catch (e) { return []; }
+}
+function saveHistory(arr) {
+  try { localStorage.setItem(K_HIST, JSON.stringify(arr.slice(0, HIST_MAX))); } catch (e) { /* ignore */ }
+}
+
+// ---------- helpers ----------
+function clearChildren(node) { while (node.firstChild) node.removeChild(node.firstChild); }
+function escRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+let toastTimer = null;
+function toast(msg) {
+  els.toast.textContent = msg;
+  els.toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => els.toast.classList.remove('show'), 1800);
+}
+function showNotice(msg, withSettingsLink) {
+  clearChildren(els.notice);
+  els.notice.appendChild(document.createTextNode(msg));
+  if (withSettingsLink) {
+    els.notice.appendChild(document.createTextNode(' '));
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = 'Open Settings';
+    b.addEventListener('click', openSettings);
+    els.notice.appendChild(b);
+  }
+  els.notice.classList.add('show');
+}
+function hideNotice() { els.notice.classList.remove('show'); }
+function timeAgo(ts) {
+  const s = Math.max(0, Math.round((Date.now() - ts) / 1000));
+  if (s < 60) return 'now';
+  const m = Math.round(s / 60); if (m < 60) return m + 'm';
+  const h = Math.round(m / 60); if (h < 24) return h + 'h';
+  const d = Math.round(h / 24); return d + 'd';
+}
+// Core noun of the object, used to highlight it in the story ("a brass key with no teeth" -> "key")
+function objectCore(obj) {
+  let s = obj.toLowerCase().replace(/^(a|an|the|some|one)\s+/, '');
+  s = s.split(/\s+(with|that|from|of|to|marked|found|which|who|in|on)\s+/)[0];
+  const words = s.split(/\s+/).filter(Boolean);
+  return words.length ? words[words.length - 1].replace(/[^a-z'-]/g, '') : '';
+}
+
+// ---------- genre chips ----------
+function renderChips() {
+  clearChildren(els.chips);
+  const g = els.genre.value.trim().toLowerCase();
+  GENRES.forEach(name => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'chip';
+    b.textContent = name;
+    b.setAttribute('aria-pressed', String(g === name.toLowerCase()));
+    b.addEventListener('click', () => {
+      els.genre.value = (els.genre.value.trim().toLowerCase() === name.toLowerCase()) ? '' : name;
+      renderChips();
+      hideNotice();
+    });
+    els.chips.appendChild(b);
+  });
+}
+
+function randomObject() {
+  let i;
+  do { i = Math.floor(Math.random() * OBJECTS.length); } while (i === lastObjIdx && OBJECTS.length > 1);
+  lastObjIdx = i;
+  els.object.value = OBJECTS[i];
+  hideNotice();
+}
+
+// ---------- settings ----------
+function openSettings() {
+  els.apiKey.value = lsGet(K_KEY, '');
+  els.sessionName.value = lsGet(K_SESSION, '');
+  els.scrim.classList.add('open');
+  els.scrim.setAttribute('aria-hidden', 'false');
+  setTimeout(() => (els.apiKey.value ? els.sessionName : els.apiKey).focus(), 50);
+}
+function closeSettings() {
+  els.scrim.classList.remove('open');
+  els.scrim.setAttribute('aria-hidden', 'true');
+  els.openSettings.focus();
+}
+function saveSettings() {
+  const k = els.apiKey.value.trim();
+  const s = els.sessionName.value.trim();
+  if (k) lsSet(K_KEY, k); else lsDel(K_KEY);
+  if (s) lsSet(K_SESSION, s); else lsDel(K_SESSION);
+  closeSettings();
+  hideNotice();
+  if (current) renderByline(current);
+  toast('Settings saved');
+}
+
+// ---------- API ----------
+function buildPrompt(genre, object) {
+  return 'Genre: ' + genre + '\nObject: ' + object + '\n\n' +
+    'Write the opening of a story in this genre. The object above must be the catalyst: the thing that sets the story in motion, not background decoration. ' +
+    'Write exactly two paragraphs, together roughly 180 to 260 words. Open in scene with a specific character, place, and moment. ' +
+    'End the second paragraph on a turn or question that makes the reader need the next page. ' +
+    'Return only the two paragraphs separated by one blank line. No title, no heading, no preamble, no markdown.';
+}
+const SYSTEM_PROMPT = 'You are a skilled fiction writer who crafts vivid, economical story openings. ' +
+  'You honor genre conventions while avoiding cliche openers such as waking up, weather reports, or mirror descriptions. ' +
+  'Keep content suitable for a general audience.';
+
+async function callClaude(genre, object) {
+  const key = lsGet(K_KEY, '');
+  if (!key) { const e = new Error('Add your Anthropic API key to plant a seed.'); e.settings = true; throw e; }
+  let res;
+  try {
+    res = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: CLAUDE_MODEL,
+        max_tokens: MAX_TOKENS,
+        thinking: { type: 'disabled' },
+        system: SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: buildPrompt(genre, object) }]
+      })
+    });
+  } catch (netErr) {
+    throw new Error('Could not reach Anthropic. Check your connection and try again.');
+  }
+  let data = null;
+  try { data = await res.json(); } catch (e) { /* non-JSON */ }
+  if (!res.ok) {
+    const msg = data && data.error && data.error.message ? data.error.message : ('Request failed (' + res.status + ').');
+    const e = new Error(res.status === 401 ? 'That API key was rejected. Check it in Settings.' : msg);
+    e.settings = res.status === 401;
+    throw e;
+  }
+  const blocks = (data && Array.isArray(data.content)) ? data.content : [];
+  const text = blocks.filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
+  if (!text) {
+    console.warn('Empty reply', { stop_reason: data && data.stop_reason, types: blocks.map(b => b.type) });
+    throw new Error('Claude returned an empty reply. Try again.');
+  }
+  return toParagraphs(text);
+}
+
+function toParagraphs(text) {
+  let paras = text.replace(/\r/g, '').split(/\n\s*\n/).map(p => p.replace(/\s*\n\s*/g, ' ').trim()).filter(Boolean);
+  paras = paras.filter(p => !/^#+\s/.test(p) && !/^\*\*[^*]+\*\*$/.test(p));
+  if (paras.length > 2) paras = [paras[0], paras.slice(1).join(' ')];
+  if (paras.length === 1) {
+    const sentences = paras[0].match(/[^.!?]+[.!?]+["')\]\u201d\u2019]*\s*|[^.!?]+$/g) || [paras[0]];
+    if (sentences.length >= 4) {
+      const mid = Math.ceil(sentences.length / 2);
+      paras = [sentences.slice(0, mid).join('').trim(), sentences.slice(mid).join('').trim()];
+    }
+  }
+  return paras;
+}
+
+// ---------- rendering ----------
+function renderLoading(genre, object) {
+  els.reading.classList.add('show');
+  renderMeta({ genre: genre, object: object });
+  clearChildren(els.story);
+  const sk = document.createElement('div');
+  sk.className = 'skeleton';
+  for (let i = 0; i < 8; i++) sk.appendChild(document.createElement('i'));
+  els.story.appendChild(sk);
+  els.byline.textContent = 'Germinating\u2026';
+}
+function renderMeta(entry) {
+  clearChildren(els.meta);
+  const g = document.createElement('span'); g.appendChild(document.createTextNode('Genre ')); const gb = document.createElement('b'); gb.textContent = entry.genre; g.appendChild(gb);
+  const o = document.createElement('span'); o.appendChild(document.createTextNode('Seed ')); const ob = document.createElement('b'); ob.textContent = entry.object; o.appendChild(ob);
+  els.meta.appendChild(g); els.meta.appendChild(o);
+}
+function renderByline(entry) {
+  const who = entry.session || lsGet(K_SESSION, '');
+  const when = new Date(entry.ts).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  els.byline.textContent = (who ? 'Planted by ' + who + ', ' : 'Planted ') + when;
+}
+function renderStory(entry) {
+  current = entry;
+  els.reading.classList.remove('show');
+  void els.reading.offsetWidth;
+  els.reading.classList.add('show');
+  renderMeta(entry);
+  clearChildren(els.story);
+  const core = objectCore(entry.object);
+  const re = core && core.length > 2 ? new RegExp('\\b(' + escRe(core) + '(?:s|es)?)\\b', 'i') : null;
+  let highlighted = false;
+  entry.paragraphs.forEach(text => {
+    const p = document.createElement('p');
+    const m = (!highlighted && re) ? re.exec(text) : null;
+    if (m) {
+      highlighted = true;
+      p.appendChild(document.createTextNode(text.slice(0, m.index)));
+      const s = document.createElement('span'); s.className = 'obj'; s.textContent = m[0]; p.appendChild(s);
+      p.appendChild(document.createTextNode(text.slice(m.index + m[0].length)));
+    } else {
+      p.textContent = text;
+    }
+    els.story.appendChild(p);
+  });
+  renderByline(entry);
+  renderHistory();
+}
+
+function renderHistory() {
+  const hist = loadHistory();
+  clearChildren(els.histList);
+  els.clearHist.style.visibility = hist.length ? 'visible' : 'hidden';
+  if (!hist.length) {
+    const li = document.createElement('li');
+    li.className = 'empty';
+    li.textContent = 'Your last ten seeds will be kept here.';
+    els.histList.appendChild(li);
+    return;
+  }
+  hist.forEach(entry => {
+    const li = document.createElement('li');
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'hist-item' + (current && current.id === entry.id ? ' active' : '');
+    const top = document.createElement('span'); top.className = 'h-top';
+    const em = document.createElement('em'); em.textContent = entry.genre;
+    top.appendChild(em); top.appendChild(document.createTextNode(' \u00b7 ' + entry.object));
+    const snip = document.createElement('span'); snip.className = 'h-snip'; snip.textContent = entry.paragraphs[0] || '';
+    const t = document.createElement('span'); t.className = 'h-time'; t.textContent = timeAgo(entry.ts);
+    b.appendChild(top); b.appendChild(t); b.appendChild(snip);
+    b.addEventListener('click', () => {
+      els.genre.value = entry.genre; els.object.value = entry.object; renderChips();
+      renderStory(entry);
+      els.reading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    li.appendChild(b);
+    els.histList.appendChild(li);
+  });
+}
+
+// ---------- actions ----------
+async function plant(genre, object) {
+  if (busy) return;
+  genre = (genre || '').trim();
+  object = (object || '').trim();
+  if (!genre) { showNotice('Pick a genre chip or type one in.'); els.genre.focus(); return; }
+  if (!object) { showNotice('Name one object, or tap Random.'); els.object.focus(); return; }
+  if (!lsGet(K_KEY, '')) { showNotice('Add your Anthropic API key to plant a seed.', true); return; }
+  hideNotice();
+  busy = true;
+  els.plant.disabled = true; els.regen.disabled = true;
+  els.plantLabel.textContent = 'Growing\u2026';
+  const prev = current;
+  renderLoading(genre, object);
+  els.reading.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  try {
+    const paragraphs = await callClaude(genre, object);
+    const entry = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      ts: Date.now(), genre: genre, object: object, paragraphs: paragraphs,
+      session: lsGet(K_SESSION, '')
+    };
+    const hist = loadHistory();
+    hist.unshift(entry);
+    saveHistory(hist);
+    renderStory(entry);
+  } catch (err) {
+    showNotice(err.message || 'Something went wrong.', !!err.settings);
+    if (prev) renderStory(prev); else els.reading.classList.remove('show');
+  } finally {
+    busy = false;
+    els.plant.disabled = false; els.regen.disabled = false;
+    els.plantLabel.textContent = 'Plant the seed';
+  }
+}
+
+async function copyStory() {
+  if (!current) return;
+  const text = current.paragraphs.join('\n\n') + '\n\n(' + current.genre + ' \u00b7 ' + current.object + ')';
+  let ok = false;
+  try {
+    if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); ok = true; }
+  } catch (e) { ok = false; }
+  if (!ok) {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'absolute'; ta.style.left = '-9999px';
+    document.body.appendChild(ta); ta.select();
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    document.body.removeChild(ta);
+  }
+  toast(ok ? 'Story copied' : 'Copy failed. Select the text instead.');
+}
+
+// ---------- wiring ----------
+els.genre.addEventListener('input', () => { renderChips(); hideNotice(); });
+els.object.addEventListener('input', hideNotice);
+els.randomObj.addEventListener('click', randomObject);
+els.plant.addEventListener('click', () => plant(els.genre.value, els.object.value));
+[els.genre, els.object].forEach(inp => inp.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); plant(els.genre.value, els.object.value); }
+}));
+els.regen.addEventListener('click', () => { if (current) plant(current.genre, current.object); });
+els.copy.addEventListener('click', copyStory);
+els.clearHist.addEventListener('click', () => {
+  if (els.clearHist.dataset.armed === '1') {
+    saveHistory([]); els.clearHist.dataset.armed = ''; els.clearHist.textContent = 'Clear';
+    renderHistory(); toast('History cleared');
+  } else {
+    els.clearHist.dataset.armed = '1'; els.clearHist.textContent = 'Tap again to clear';
+    setTimeout(() => { els.clearHist.dataset.armed = ''; els.clearHist.textContent = 'Clear'; }, 3000);
+  }
+});
+els.openSettings.addEventListener('click', openSettings);
+els.cancelSettings.addEventListener('click', closeSettings);
+els.saveSettings.addEventListener('click', saveSettings);
+els.scrim.addEventListener('click', e => { if (e.target === els.scrim) closeSettings(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && els.scrim.classList.contains('open')) closeSettings(); });
+[els.apiKey, els.sessionName].forEach(inp => inp.addEventListener('keydown', e => { if (e.key === 'Enter') saveSettings(); }));
+
+renderChips();
+renderHistory();
+const firstHist = loadHistory()[0];
+if (firstHist) { els.genre.value = firstHist.genre; els.object.value = firstHist.object; renderChips(); renderStory(firstHist); }
+</script>
+</body>
+</html>
